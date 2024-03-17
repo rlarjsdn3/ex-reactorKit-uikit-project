@@ -23,6 +23,8 @@ final class TextFieldViewController: UIViewController, View {
     var capitalizedStringLabel: UILabel = UILabel()
     var lengthOfStringLabel: UILabel = UILabel()
     
+    var settingButton: UIButton = UIButton(configuration: .borderedProminent())
+    
     var stackView: UIStackView = UIStackView()
     
     // MARK: - Properties
@@ -53,6 +55,12 @@ final class TextFieldViewController: UIViewController, View {
             .bind(to: reactor.action)
             .disposed(by: disposeBag)
         
+        settingButton.rx.tap
+            .throttle(.milliseconds(300), scheduler: MainScheduler.instance)
+            .map { Reactor.Action.didTapSettingButton }
+            .bind(to: reactor.action)
+            .disposed(by: disposeBag)
+        
         reactor.state.map { $0.capitalizedString }
             .distinctUntilChanged()
             .bind(to: capitalizedStringLabel.rx.text)
@@ -71,6 +79,13 @@ final class TextFieldViewController: UIViewController, View {
             }
             .disposed(by: disposeBag)
         
+        reactor.pulse(\.$settingViewController)
+            .compactMap { $0 }
+            .bind(with: self) { owner, vc in
+                owner.navigationController?.pushViewController(vc, animated: true)
+            }
+            .disposed(by: disposeBag)
+        
         reactor.state.map { $0.backgroundColor }
             .distinctUntilChanged()
             .bind(to: view.rx.backgroundColor)
@@ -83,6 +98,7 @@ final class TextFieldViewController: UIViewController, View {
         stackView.addArrangedSubview(capitalizedStringLabel)
         stackView.addArrangedSubview(lengthOfStringLabel)
         stackView.addArrangedSubview(textfield)
+        stackView.addArrangedSubview(settingButton)
     }
     
     func setupAutoLayout() {
@@ -106,6 +122,10 @@ final class TextFieldViewController: UIViewController, View {
             $0.borderStyle = .bezel
         }
         textfield.becomeFirstResponder()
+        
+        settingButton.do {
+            $0.setTitle("설정", for: .normal)
+        }
     }
 }
 
