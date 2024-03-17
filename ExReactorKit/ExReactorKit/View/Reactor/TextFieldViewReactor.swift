@@ -24,6 +24,8 @@ final class TextFieldViewReactor: Reactor {
     
     // MARK: - State
     struct State {
+        var backgroundColor: UIColor?
+        
         var capitalizedString: String?
         var lengthOfString: Int?
     }
@@ -32,8 +34,10 @@ final class TextFieldViewReactor: Reactor {
     var initialState: State
     
     // MARK: - Intializer
-    init() {
-        self.initialState = State()
+    init(backgroundColor color: UIColor? = nil) {
+        self.initialState = State(
+            backgroundColor: color
+        )
     }
     
     // MARK: - Mutate

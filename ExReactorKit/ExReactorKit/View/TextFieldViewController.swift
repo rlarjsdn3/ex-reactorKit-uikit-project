@@ -54,11 +54,15 @@ final class TextFieldViewController: UIViewController, View {
             .bind(to: capitalizedStringLabel.rx.text)
             .disposed(by: disposeBag)
         
-        reactor.state.map { $0.lengthOfString }
-            .compactMap { $0 }
+        reactor.state.compactMap { $0.lengthOfString }
             .map { "\($0)" }
             .distinctUntilChanged()
             .bind(to: lengthOfStringLabel.rx.text)
+            .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.backgroundColor }
+            .distinctUntilChanged()
+            .bind(to: view.rx.backgroundColor)
             .disposed(by: disposeBag)
     }
     
