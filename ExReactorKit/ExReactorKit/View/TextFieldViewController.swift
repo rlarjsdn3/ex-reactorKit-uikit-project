@@ -42,6 +42,10 @@ final class TextFieldViewController: UIViewController, View {
         setupAttributes()
     }
     
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        textfield.resignFirstResponder()
+    }
+    
     // MARK: - Reactor
     func bind(reactor: TextFieldViewReactor) {
         textfield.rx.text.orEmpty
@@ -60,6 +64,13 @@ final class TextFieldViewController: UIViewController, View {
             .bind(to: lengthOfStringLabel.rx.text)
             .disposed(by: disposeBag)
         
+        reactor.pulse(\.$alertMessage)
+            .compactMap { $0 }
+            .bind(with: self) {
+                $0.showWarningAlert($1)
+            }
+            .disposed(by: disposeBag)
+        
         reactor.state.map { $0.backgroundColor }
             .distinctUntilChanged()
             .bind(to: view.rx.backgroundColor)
@@ -75,25 +86,48 @@ final class TextFieldViewController: UIViewController, View {
     }
     
     func setupAutoLayout() {
-        stackView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.horizontalEdges.equalToSuperview().inset(10)
+        stackView.snp.makeConstraints {
+            $0.center.equalToSuperview()
+            $0.horizontalEdges.equalToSuperview().inset(10)
         }
     }
     
     func setupAttributes() {
         view.backgroundColor = UIColor.white
         
-        stackView.do { view in
-            view.axis = .vertical
-            view.alignment = .fill
-            view.distribution = .fillProportionally
-            view.spacing = 10
+        stackView.do {
+            $0.axis = .vertical
+            $0.alignment = .fill
+            $0.distribution = .fillProportionally
+            $0.spacing = 10
         }
         
-        textfield.do { view in
-            view.borderStyle = .bezel
+        textfield.do {
+            $0.borderStyle = .bezel
         }
+        textfield.becomeFirstResponder()
     }
 }
+
+// MARK: - Extensions
+extension TextFieldViewController {
+    func showWarningAlert(_ message: String) {
+        // Clear all field and labels
+        textfield.text?.removeAll()
+        lengthOfStringLabel.text = "0"
+        capitalizedStringLabel.text?.removeAll()
+        
+        // Show warning alert
+        let alert = UIAlertController(
+            title: "입력 오류",
+            message: message,
+            preferredStyle: .alert
+        )
+        let ok = UIAlertAction(title: "확인", style: .default)
+        alert.addAction(ok)
+        
+        present(alert, animated: true)
+    }
+}
+
 
